@@ -1,0 +1,66 @@
+name: Create Release
+
+on:
+  push:
+    branches: [ "**" ]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Create release directory
+      run: |
+        mkdir -p release
+        
+    - name: Copy project files to release
+      run: |
+        # Copy main project files
+        cp index.html release/
+        cp index.css release/
+        cp index.js release/
+        cp jquery.min.js release/
+        cp tailwind.min.css release/
+        
+        # Copy img directory if it exists
+        if [ -d "img" ]; then
+          cp -r img release/
+        fi
+        
+    - name: Create zip file
+      run: |
+        cd release
+        zip -r ../captive-portal-v1.0.${{ github.run_number }}.zip .
+        cd ..
+        
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v1.0.${{ github.run_number }}
+        release_name: Captive Portal Release v1.0.${{ github.run_number }}
+        body: |
+          Automated release of captive portal project.
+          
+          Version: 1.0.${{ github.run_number }}
+          Build: ${{ github.run_number }}
+          Commit: ${{ github.sha }}
+          
+          This release contains the complete captive portal static files ready for deployment.
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./captive-portal-v1.0.${{ github.run_number }}.zip
+        asset_name: captive-portal-v1.0.${{ github.run_number }}.zip
+        asset_content_type: application/zip
