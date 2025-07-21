@@ -13,9 +13,9 @@ body.portal {
     height: 100%;
     font-size: 15px;
     font-weight: 400;
-    color: #fff;
+    color: #333;
     
-    background: url("background.png") 0% 0% / cover no-repeat;
+    background: white;
 }
 
 .logo-img {
