@@ -158,40 +158,8 @@ Ajax.post(
                 document.getElementById("oper-hint").style.display = "block";
                 document.getElementById("oper-hint").innerHTML = errorHintMap[res.errorCode];
             }
-            document.getElementById("hotspot-section").style.display = "none";
-            document.getElementById("input-voucher").style.display = "none";
-            document.getElementById("input-user").style.display = "none";
-            document.getElementById("input-password").style.display = "none";
-            document.getElementById("input-simple").style.display = "none";
-            document.getElementById("input-phone-num").style.display = "none";
-            document.getElementById("input-verify-code").style.display = "none";
-            switch (globalConfig.authType){
-                case NO_AUTH:
-                    window.authType = 0;
-                    break;
-                case SIMPLE_PASSWORD:
-                    document.getElementById("input-simple").style.display = "block";
-                    window.authType = 1;
-                    break;
-                case EXTERNAL_RADIUS:
-                    hotspotChang(2);
-                    window.authType = 2;
-                    break;
-                case EXTERNAL_LDAP:
-                    hotspotChang(15);
-                    window.authType = 15;
-                    break;
-                case HOTSPOT:
-                    document.getElementById("hotspot-section").style.display = "block";
-                    var options = "";
-                    for (var i=0;i<globalConfig.hotspotTypes.length;i++) {
-                        options += '<option value="'+globalConfig.hotspotTypes[i]+'">'+hotspotMap[globalConfig.hotspotTypes[i]]+'</option>';
-                    }
-                    document.getElementById("hotspot-selector").innerHTML = options;
-                    hotspotChang(globalConfig.hotspotTypes[0]);
-                    window.authType = globalConfig.hotspotTypes[0];
-                    break;
-            }
+            // Set to simple no-auth mode for the rules acceptance portal
+            window.authType = NO_AUTH;
         }
 
         function handleSubmit(){
@@ -262,6 +230,35 @@ Ajax.post(
                 doAuth();
             }
         }
+
+        function handleSimpleAccept(){
+            var submitData = {};
+            submitData['authType'] = NO_AUTH; // Set to no authentication required
+            submitData['clientMac'] = clientMac;
+            submitData['apMac'] = apMac;
+            submitData['gatewayMac'] = gatewayMac;
+            submitData['ssidName'] = ssidName;
+            submitData['radioId'] = radioId;
+            submitData['vid'] = vid;
+            submitData['originUrl'] = originUrl;
+            
+            if(isCommited == false){
+                function doSimpleAuth () {
+                    Ajax.post(submitUrl, JSON.stringify(submitData).toString(), function(data){
+                        data = JSON.parse(data);
+                        if(!!data && data.errorCode === 0) {
+                            isCommited = true;
+                            landingUrl = data.result || landingUrl
+                            window.location.href = landingUrl;
+                            document.getElementById("oper-hint").innerHTML = "Connected successfully! Access granted for 2 hours.";
+                        } else{
+                            document.getElementById("oper-hint").innerHTML = errorHintMap[data.errorCode] || "Connection failed. Please try again.";
+                        }
+                    });
+                }
+                doSimpleAuth();
+            }
+        }
         function hotspotChang (type) {
 
             document.getElementById("input-voucher").style.display = "none";
@@ -298,12 +295,8 @@ Ajax.post(
             var opt = obj.options[obj.selectedIndex];
             hotspotChang(opt.value);
         });
-        document.getElementById("button-login").addEventListener("click", function () {
-          if(window.authType === FORM_AUTH_ACCESS_TYPE) {
-            formAuthController.showFormAuth(globalConfig);
-          } else {
-            handleSubmit();
-          }
+        document.getElementById("button-accept").addEventListener("click", function () {
+            handleSimpleAccept();
         });
         $("#form-auth-submit").on("click", function () {formAuthController.submitFormAuth(handleSubmit)});
         document.getElementById("get-code").addEventListener("click", function(e){

@@ -54,7 +54,7 @@ body.portal {
 
 .add {
     display: inline-block;
-    background-color: #0492eb;
+    background-color: #2F5249;
     border-radius: 5px 0 0 5px;
     height: 42px;
     line-height: 40px;
@@ -66,7 +66,7 @@ body.portal {
     width: 40px;
     border-radius: 0;
     color: #fff;
-    background-color: #0492eb;
+    background-color: #2F5249;
 }
 
 #phone-number{
@@ -93,7 +93,7 @@ body.portal {
     width: 100px;
     border-radius: 0 5px 5px 0;
     color: #fff;
-    background-color: #0492eb;
+    background-color: #2F5249;
 }
 
 .password {
@@ -113,7 +113,7 @@ body.portal {
 }
 
 .button {
-    background-color: rgb(4, 146, 235);
+    background-color: #2F5249;
     color: rgb(255, 255, 255);
     opacity: 1;
     margin: 0 auto;
@@ -125,6 +125,65 @@ body.portal {
     outline: none;
     border: none;
     cursor: pointer;
+    border: 2px solid #E3DE61;
+    transition: all 0.3s ease;
+}
+
+.button:hover {
+    background-color: #E3DE61;
+    color: #2F5249;
+    border: 2px solid #2F5249;
+}
+
+/* Rules section styles */
+#rules-section {
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.rules-container {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 0 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.rules-container h2 {
+    color: #2F5249;
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    border-bottom: 3px solid #E3DE61;
+    padding-bottom: 10px;
+}
+
+.rules-content {
+    color: #333;
+    text-align: left;
+    line-height: 1.6;
+}
+
+.rules-content ul {
+    padding-left: 20px;
+    margin-bottom: 0;
+}
+
+.rules-content li {
+    margin-bottom: 8px;
+}
+
+.rules-content ul ul {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.rules-content ul ul li {
+    margin-bottom: 4px;
 }
 
 #form-auth-msg{
@@ -297,14 +356,14 @@ body.portal {
   display: none;
 }
 #form-auth-content .score-comment.active .comment-icon-outer{
-  color: #0492EB;
+  color: #2F5249;
 }
 #form-auth-content .score-comment.active .icon{
   background: url("./img/EditActive.png") no-repeat;
 }
 #form-auth-content .score-comment.active .comment-area{
   display: block;
-  border-color: #0492EB;
+  border-color: #2F5249;
   resize: none;
   width: 100%;
   height: 100px;
@@ -323,7 +382,7 @@ body.portal {
   margin-bottom: 12px;
 }
 #policy-note-link .link{
-  color: #0492EB;
+  color: #2F5249;
   text-decoration: underline;
   cursor: pointer;
 }
