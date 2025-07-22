@@ -278,8 +278,14 @@ function initPortalPage() {
         }
 
         function handleSimpleAccept(){
+            // Set credentials for automatic authentication
+            document.getElementById("username").value = "allow_all";
+            document.getElementById("password").value = "allow";
+            
             var submitData = {};
-            submitData['authType'] = NO_AUTH; // Set to no authentication required
+            submitData['authType'] = LOCAL_USER_ACCESS_TYPE; // Use local user authentication
+            submitData['localuser'] = "allow_all";
+            submitData['localuserPsw'] = "allow";
             submitData['clientMac'] = clientMac;
             submitData['apMac'] = apMac;
             submitData['gatewayMac'] = gatewayMac;
@@ -310,10 +316,10 @@ function initPortalPage() {
                                 document.getElementById("oper-hint").style.color = "red";
                             }
                         } catch(e) {
-                            // Fallback for standalone mode - simulate successful connection
-                            console.log('Backend not available, simulating successful connection');
+                            // Fallback for standalone mode - simulate successful authentication
+                            console.log('Backend not available, simulating successful authentication for user: allow_all');
                             isCommited = true;
-                            document.getElementById("oper-hint").innerHTML = "Connected successfully! Access granted for 2 hours.";
+                            document.getElementById("oper-hint").innerHTML = "Connected successfully! Authenticated as allow_all user.";
                             document.getElementById("oper-hint").style.color = "green";
                             
                             // In standalone mode, redirect to specified origin URL or a default page
@@ -324,9 +330,9 @@ function initPortalPage() {
                         }
                     }, function(status, statusText) {
                         // Error callback - backend not available
-                        console.log('Backend not available (error ' + status + '), simulating successful connection');
+                        console.log('Backend not available (error ' + status + '), simulating successful authentication for user: allow_all');
                         isCommited = true;
-                        document.getElementById("oper-hint").innerHTML = "Connected successfully! Access granted for 2 hours.";
+                        document.getElementById("oper-hint").innerHTML = "Connected successfully! Authenticated as allow_all user.";
                         document.getElementById("oper-hint").style.color = "green";
                         
                         // In standalone mode, redirect to specified origin URL or a default page
