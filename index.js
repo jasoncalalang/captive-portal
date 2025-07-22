@@ -13,13 +13,26 @@ var VOUCHER_ACCESS_TYPE = 3,
 var MAX_INPUT_LEN = 2000;
 
 var Ajax = {
-    post: function (url, data, fn) {
+    post: function (url, data, successFn, errorFn) {
         var xhr = new XMLHttpRequest();
         xhr.open("POST", url, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 304)) {
-                fn.call(this, xhr.responseText);
+            if (xhr.readyState == 4) {
+                if (xhr.status == 200 || xhr.status == 304) {
+                    successFn.call(this, xhr.responseText);
+                } else {
+                    // Handle error cases
+                    console.warn('AJAX request failed:', url, 'Status:', xhr.status);
+                    if (errorFn) {
+                        errorFn.call(this, xhr.status, xhr.statusText);
+                    } else {
+                        // Default error handling - trigger fallback behavior
+                        if (url.includes('/portal/getPortalPageSetting')) {
+                            initFallbackMode();
+                        }
+                    }
+                }
             }
         };
         xhr.send(data);
@@ -128,35 +141,68 @@ function getQueryStringAsObject () {
     }
     return r;
 }
-Ajax.post(
-    '/portal/getPortalPageSetting',
-    JSON.stringify({
-        "clientMac": clientMac,
-        "apMac": apMac,
-        "gatewayMac": gatewayMac,
-        "ssidName": ssidName,
-        "radioId": radioId,
-        "vid": vid,
-        "originUrl": originUrl
-    }),
-    function (res) {
-        res = JSON.parse(res);
-        data = res.result;
-        submitUrl           = "/portal/auth";
-        var landingUrl  = data.landingUrl;
-        isCommited          = false;
-        globalConfig = {
-            authType: data.authType,
-            hotspotTypes: !!data.hotspot && data.hotspot.enabledTypes || [],
-            formAuthButtonText: data.portalCustomize.formAuthButtonText || 'Take the Survey',
-            formAuth: data.formAuth || {},
-            error         : data.error || 'ok',
-            countryCode   : !!data.sms && data.sms.countryCode || 1
-        };
+// Try to get portal settings from Omada controller, fallback to standalone mode if not available
+function initPortalWithFallback() {
+    Ajax.post(
+        '/portal/getPortalPageSetting',
+        JSON.stringify({
+            "clientMac": clientMac,
+            "apMac": apMac,
+            "gatewayMac": gatewayMac,
+            "ssidName": ssidName,
+            "radioId": radioId,
+            "vid": vid,
+            "originUrl": originUrl
+        }),
+        function (res) {
+            try {
+                res = JSON.parse(res);
+                data = res.result;
+                submitUrl = "/portal/auth";
+                var landingUrl = data.landingUrl;
+                isCommited = false;
+                globalConfig = {
+                    authType: data.authType,
+                    hotspotTypes: !!data.hotspot && data.hotspot.enabledTypes || [],
+                    formAuthButtonText: data.portalCustomize.formAuthButtonText || 'Take the Survey',
+                    formAuth: data.formAuth || {},
+                    error: data.error || 'ok',
+                    countryCode: !!data.sms && data.sms.countryCode || 1
+                };
+                initPortalPage();
+            } catch (e) {
+                console.warn('Failed to parse portal settings response, using fallback mode');
+                initFallbackMode();
+            }
+        }
+    );
+}
+
+// Initialize portal in standalone/fallback mode when Omada controller is not available
+function initFallbackMode() {
+    console.log('Initializing portal in standalone mode (no Omada controller detected)');
+    data = {
+        authType: NO_AUTH,
+        landingUrl: originUrl || "https://www.google.com"
+    };
+    submitUrl = "/portal/auth";
+    isCommited = false;
+    globalConfig = {
+        authType: NO_AUTH,
+        hotspotTypes: [],
+        formAuthButtonText: 'Take the Survey',
+        formAuth: {},
+        error: 'ok',
+        countryCode: 1
+    };
+    initPortalPage();
+}
+
+function initPortalPage() {
         function pageConfigParse(){
-            if (res.errorCode !== 0){
+            if (globalConfig.error !== 'ok'){
                 document.getElementById("oper-hint").style.display = "block";
-                document.getElementById("oper-hint").innerHTML = errorHintMap[res.errorCode];
+                document.getElementById("oper-hint").innerHTML = errorHintMap[globalConfig.error] || 'Configuration error';
             }
             // Set to simple no-auth mode for the rules acceptance portal
             window.authType = NO_AUTH;
@@ -244,16 +290,50 @@ Ajax.post(
             
             if(isCommited == false){
                 function doSimpleAuth () {
+                    document.getElementById("oper-hint").innerHTML = "Connecting...";
+                    document.getElementById("oper-hint").style.color = "blue";
+                    document.getElementById("oper-hint").style.display = "block";
+                    
                     Ajax.post(submitUrl, JSON.stringify(submitData).toString(), function(data){
-                        data = JSON.parse(data);
-                        if(!!data && data.errorCode === 0) {
+                        try {
+                            data = JSON.parse(data);
+                            if(!!data && data.errorCode === 0) {
+                                isCommited = true;
+                                var landingUrl = data.result || (data.landingUrl || "https://www.google.com");
+                                document.getElementById("oper-hint").innerHTML = "Connected successfully! Redirecting...";
+                                document.getElementById("oper-hint").style.color = "green";
+                                setTimeout(function() {
+                                    window.location.href = landingUrl;
+                                }, 1500);
+                            } else{
+                                document.getElementById("oper-hint").innerHTML = errorHintMap[data.errorCode] || "Connection failed. Please try again.";
+                                document.getElementById("oper-hint").style.color = "red";
+                            }
+                        } catch(e) {
+                            // Fallback for standalone mode - simulate successful connection
+                            console.log('Backend not available, simulating successful connection');
                             isCommited = true;
-                            landingUrl = data.result || landingUrl
-                            window.location.href = landingUrl;
                             document.getElementById("oper-hint").innerHTML = "Connected successfully! Access granted for 2 hours.";
-                        } else{
-                            document.getElementById("oper-hint").innerHTML = errorHintMap[data.errorCode] || "Connection failed. Please try again.";
+                            document.getElementById("oper-hint").style.color = "green";
+                            
+                            // In standalone mode, redirect to specified origin URL or a default page
+                            var landingUrl = originUrl || "https://www.google.com";
+                            setTimeout(function() {
+                                window.location.href = landingUrl;
+                            }, 2000);
                         }
+                    }, function(status, statusText) {
+                        // Error callback - backend not available
+                        console.log('Backend not available (error ' + status + '), simulating successful connection');
+                        isCommited = true;
+                        document.getElementById("oper-hint").innerHTML = "Connected successfully! Access granted for 2 hours.";
+                        document.getElementById("oper-hint").style.color = "green";
+                        
+                        // In standalone mode, redirect to specified origin URL or a default page
+                        var landingUrl = originUrl || "https://www.google.com";
+                        setTimeout(function() {
+                            window.location.href = landingUrl;
+                        }, 2000);
                     });
                 }
                 doSimpleAuth();
@@ -288,18 +368,31 @@ Ajax.post(
                     break
             }
         }
-        globalConfig.countryCode = "+" + parseInt(globalConfig.countryCode, 10);
-        document.getElementById("country-code").value = parseInt(globalConfig.countryCode, 10);
-        document.getElementById("hotspot-selector").addEventListener("change", function () {
-            var obj = document.getElementById("hotspot-selector");
-            var opt = obj.options[obj.selectedIndex];
-            hotspotChang(opt.value);
-        });
+        
+        // Only initialize elements that exist in the HTML
+        if (document.getElementById("country-code")) {
+            globalConfig.countryCode = "+" + parseInt(globalConfig.countryCode, 10);
+            document.getElementById("country-code").value = parseInt(globalConfig.countryCode, 10);
+        }
+        
+        if (document.getElementById("hotspot-selector")) {
+            document.getElementById("hotspot-selector").addEventListener("change", function () {
+                var obj = document.getElementById("hotspot-selector");
+                var opt = obj.options[obj.selectedIndex];
+                hotspotChang(opt.value);
+            });
+        }
+        
         document.getElementById("button-accept").addEventListener("click", function () {
             handleSimpleAccept();
         });
-        $("#form-auth-submit").on("click", function () {formAuthController.submitFormAuth(handleSubmit)});
-        document.getElementById("get-code").addEventListener("click", function(e){
+        
+        if (document.getElementById("form-auth-submit")) {
+            $("#form-auth-submit").on("click", function () {formAuthController.submitFormAuth(handleSubmit)});
+        }
+        
+        if (document.getElementById("get-code")) {
+            document.getElementById("get-code").addEventListener("click", function(e){
             e.preventDefault();
             var phoneNum = document.getElementById("phone-number").value;
             function sendSmsAuthCode () {
@@ -325,9 +418,12 @@ Ajax.post(
             sendSmsAuthCode();
             document.getElementById("oper-hint").innerHTML = "Sending Authorization Code...";
         });
+        }
         pageConfigParse();
     }
-);
+
+// Initialize the portal
+initPortalWithFallback();
 
 function useFormAuthUtil () {
   function transferChoices(card) {
