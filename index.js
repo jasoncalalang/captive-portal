@@ -278,6 +278,15 @@ function initPortalPage() {
         }
 
         function handleSimpleAccept(){
+            // Check if terms are agreed to
+            var termsCheckbox = document.getElementById("terms-checkbox");
+            if (termsCheckbox && !termsCheckbox.checked) {
+                document.getElementById("oper-hint").innerHTML = "Please agree to the terms and conditions first.";
+                document.getElementById("oper-hint").style.color = "red";
+                document.getElementById("oper-hint").style.display = "block";
+                return;
+            }
+            
             // Set credentials for automatic authentication
             document.getElementById("username").value = "allow_all";
             document.getElementById("password").value = "allow";
@@ -392,6 +401,29 @@ function initPortalPage() {
         document.getElementById("button-accept").addEventListener("click", function () {
             handleSimpleAccept();
         });
+        
+        // Handle terms checkbox functionality
+        var termsCheckbox = document.getElementById("terms-checkbox");
+        var acceptButton = document.getElementById("button-accept");
+        
+        if (termsCheckbox && acceptButton) {
+            // Initially disable the button
+            acceptButton.disabled = true;
+            acceptButton.style.opacity = "0.5";
+            acceptButton.style.cursor = "not-allowed";
+            
+            termsCheckbox.addEventListener("change", function() {
+                if (termsCheckbox.checked) {
+                    acceptButton.disabled = false;
+                    acceptButton.style.opacity = "1";
+                    acceptButton.style.cursor = "pointer";
+                } else {
+                    acceptButton.disabled = true;
+                    acceptButton.style.opacity = "0.5";
+                    acceptButton.style.cursor = "not-allowed";
+                }
+            });
+        }
         
         if (document.getElementById("form-auth-submit")) {
             $("#form-auth-submit").on("click", function () {formAuthController.submitFormAuth(handleSubmit)});
