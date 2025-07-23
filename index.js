@@ -393,9 +393,15 @@ function initPortalPage() {
         
         // Modal functionality
         function showRulesModal() {
-            document.getElementById("rules-modal").style.display = "flex";
+            var modal = document.getElementById("rules-modal");
             var modalContent = document.getElementById("modal-content");
             var acceptButton = document.getElementById("modal-accept");
+            
+            // Show modal with smooth animation
+            modal.style.display = "flex";
+            // Force reflow to ensure display change is applied before adding class
+            modal.offsetHeight;
+            modal.classList.add("modal-show");
             
             // Reset scroll position and disable accept button
             modalContent.scrollTop = 0;
@@ -409,7 +415,15 @@ function initPortalPage() {
         }
         
         function hideRulesModal() {
-            document.getElementById("rules-modal").style.display = "none";
+            var modal = document.getElementById("rules-modal");
+            
+            // Start fade out animation
+            modal.classList.remove("modal-show");
+            
+            // Hide modal after animation completes
+            setTimeout(function() {
+                modal.style.display = "none";
+            }, 300);
         }
         
         function acceptRules() {
