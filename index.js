@@ -277,24 +277,31 @@ function initPortalPage() {
             }
         }
 
-        function handleSimpleAccept(){
+        function handleLogin(){
             // Check if terms are agreed to
             var termsCheckbox = document.getElementById("terms-checkbox");
             if (termsCheckbox && !termsCheckbox.checked) {
-                document.getElementById("oper-hint").innerHTML = "Please agree to the terms and conditions first.";
+                document.getElementById("oper-hint").innerHTML = "Please agree to the WiFi usage rules first.";
                 document.getElementById("oper-hint").style.color = "red";
                 document.getElementById("oper-hint").style.display = "block";
                 return;
             }
             
-            // Set credentials for automatic authentication
-            document.getElementById("username").value = "allow_all";
-            document.getElementById("password").value = "allow";
+            // Get username and password values
+            var username = document.getElementById("username").value.trim();
+            var password = document.getElementById("password").value.trim();
+            
+            if (!username || !password) {
+                document.getElementById("oper-hint").innerHTML = "Please enter both username and password.";
+                document.getElementById("oper-hint").style.color = "red";
+                document.getElementById("oper-hint").style.display = "block";
+                return;
+            }
             
             var submitData = {};
             submitData['authType'] = LOCAL_USER_ACCESS_TYPE; // Use local user authentication
-            submitData['localuser'] = "allow_all";
-            submitData['localuserPsw'] = "allow";
+            submitData['localuser'] = username;
+            submitData['localuserPsw'] = password;
             submitData['clientMac'] = clientMac;
             submitData['apMac'] = apMac;
             submitData['gatewayMac'] = gatewayMac;
@@ -304,8 +311,8 @@ function initPortalPage() {
             submitData['originUrl'] = originUrl;
             
             if(isCommited == false){
-                function doSimpleAuth () {
-                    document.getElementById("oper-hint").innerHTML = "Connecting...";
+                function doAuth () {
+                    document.getElementById("oper-hint").innerHTML = "Authenticating...";
                     document.getElementById("oper-hint").style.color = "blue";
                     document.getElementById("oper-hint").style.display = "block";
                     
@@ -315,20 +322,20 @@ function initPortalPage() {
                             if(!!data && data.errorCode === 0) {
                                 isCommited = true;
                                 var landingUrl = data.result || (data.landingUrl || "https://www.google.com");
-                                document.getElementById("oper-hint").innerHTML = "Connected successfully! Redirecting...";
+                                document.getElementById("oper-hint").innerHTML = "Authentication successful! Redirecting...";
                                 document.getElementById("oper-hint").style.color = "green";
                                 setTimeout(function() {
                                     window.location.href = landingUrl;
                                 }, 1500);
                             } else{
-                                document.getElementById("oper-hint").innerHTML = errorHintMap[data.errorCode] || "Connection failed. Please try again.";
+                                document.getElementById("oper-hint").innerHTML = errorHintMap[data.errorCode] || "Authentication failed. Please try again.";
                                 document.getElementById("oper-hint").style.color = "red";
                             }
                         } catch(e) {
                             // Fallback for standalone mode - simulate successful authentication
-                            console.log('Backend not available, simulating successful authentication for user: allow_all');
+                            console.log('Backend not available, simulating successful authentication for user: ' + username);
                             isCommited = true;
-                            document.getElementById("oper-hint").innerHTML = "Connected successfully! Authenticated as allow_all user.";
+                            document.getElementById("oper-hint").innerHTML = "Authentication successful! Authenticated as " + username + ".";
                             document.getElementById("oper-hint").style.color = "green";
                             
                             // In standalone mode, redirect to specified origin URL or a default page
@@ -339,9 +346,9 @@ function initPortalPage() {
                         }
                     }, function(status, statusText) {
                         // Error callback - backend not available
-                        console.log('Backend not available (error ' + status + '), simulating successful authentication for user: allow_all');
+                        console.log('Backend not available (error ' + status + '), simulating successful authentication for user: ' + username);
                         isCommited = true;
-                        document.getElementById("oper-hint").innerHTML = "Connected successfully! Authenticated as allow_all user.";
+                        document.getElementById("oper-hint").innerHTML = "Authentication successful! Authenticated as " + username + ".";
                         document.getElementById("oper-hint").style.color = "green";
                         
                         // In standalone mode, redirect to specified origin URL or a default page
@@ -351,7 +358,7 @@ function initPortalPage() {
                         }, 2000);
                     });
                 }
-                doSimpleAuth();
+                doAuth();
             }
         }
         function hotspotChang (type) {
@@ -384,6 +391,47 @@ function initPortalPage() {
             }
         }
         
+        // Modal functionality
+        function showRulesModal() {
+            document.getElementById("rules-modal").style.display = "flex";
+            var modalContent = document.getElementById("modal-content");
+            var acceptButton = document.getElementById("modal-accept");
+            
+            // Reset scroll position and disable accept button
+            modalContent.scrollTop = 0;
+            acceptButton.disabled = true;
+            
+            // Check if user has scrolled to bottom
+            modalContent.addEventListener('scroll', function() {
+                var isScrolledToBottom = modalContent.scrollTop + modalContent.clientHeight >= modalContent.scrollHeight - 5;
+                acceptButton.disabled = !isScrolledToBottom;
+            });
+        }
+        
+        function hideRulesModal() {
+            document.getElementById("rules-modal").style.display = "none";
+        }
+        
+        function acceptRules() {
+            var termsCheckbox = document.getElementById("terms-checkbox");
+            termsCheckbox.checked = true;
+            updateLoginButtonState();
+            hideRulesModal();
+        }
+        
+        function updateLoginButtonState() {
+            var termsCheckbox = document.getElementById("terms-checkbox");
+            var loginButton = document.getElementById("button-login");
+            var username = document.getElementById("username").value.trim();
+            var password = document.getElementById("password").value.trim();
+            
+            if (termsCheckbox && termsCheckbox.checked && username && password) {
+                loginButton.disabled = false;
+            } else {
+                loginButton.disabled = true;
+            }
+        }
+        
         // Only initialize elements that exist in the HTML
         if (document.getElementById("country-code")) {
             globalConfig.countryCode = "+" + parseInt(globalConfig.countryCode, 10);
@@ -398,32 +446,68 @@ function initPortalPage() {
             });
         }
         
-        document.getElementById("button-accept").addEventListener("click", function () {
-            handleSimpleAccept();
-        });
+        // Event listeners for new layout
+        if (document.getElementById("button-login")) {
+            document.getElementById("button-login").addEventListener("click", function () {
+                handleLogin();
+            });
+        }
         
-        // Handle terms checkbox functionality
+        // Terms checkbox click handler - opens modal instead of direct toggle
         var termsCheckbox = document.getElementById("terms-checkbox");
-        var acceptButton = document.getElementById("button-accept");
+        if (termsCheckbox) {
+            termsCheckbox.addEventListener("click", function(e) {
+                e.preventDefault(); // Prevent default checkbox behavior
+                showRulesModal();
+            });
+        }
         
-        if (termsCheckbox && acceptButton) {
-            // Initially disable the button
-            acceptButton.disabled = true;
-            acceptButton.style.opacity = "0.5";
-            acceptButton.style.cursor = "not-allowed";
-            
-            termsCheckbox.addEventListener("change", function() {
-                if (termsCheckbox.checked) {
-                    acceptButton.disabled = false;
-                    acceptButton.style.opacity = "1";
-                    acceptButton.style.cursor = "pointer";
-                } else {
-                    acceptButton.disabled = true;
-                    acceptButton.style.opacity = "0.5";
-                    acceptButton.style.cursor = "not-allowed";
+        // Terms text click handler - also opens modal
+        var termsText = document.querySelector(".terms-text");
+        if (termsText) {
+            termsText.addEventListener("click", function(e) {
+                e.preventDefault();
+                showRulesModal();
+            });
+        }
+        
+        // Modal event handlers
+        if (document.getElementById("modal-close")) {
+            document.getElementById("modal-close").addEventListener("click", function() {
+                hideRulesModal();
+            });
+        }
+        
+        if (document.getElementById("modal-accept")) {
+            document.getElementById("modal-accept").addEventListener("click", function() {
+                acceptRules();
+            });
+        }
+        
+        // Close modal when clicking outside
+        var rulesModal = document.getElementById("rules-modal");
+        if (rulesModal) {
+            rulesModal.addEventListener("click", function(e) {
+                if (e.target === rulesModal) {
+                    hideRulesModal();
                 }
             });
         }
+        
+        // Form input handlers to update login button state
+        var usernameInput = document.getElementById("username");
+        var passwordInput = document.getElementById("password");
+        
+        if (usernameInput) {
+            usernameInput.addEventListener("input", updateLoginButtonState);
+        }
+        
+        if (passwordInput) {
+            passwordInput.addEventListener("input", updateLoginButtonState);
+        }
+        
+        // Initialize login button state
+        updateLoginButtonState();
         
         if (document.getElementById("form-auth-submit")) {
             $("#form-auth-submit").on("click", function () {formAuthController.submitFormAuth(handleSubmit)});

@@ -12,45 +12,74 @@
         <div class="oper-section-inner">
             <span id="oper-hint" style="color: red"></span>
             
-            <div id="rules-section">
-                <div class="rules-container">
-                    <h2>WiFi Usage Rules</h2>
-                    <div class="rules-content">
-                        <ul>
-                            <li>This WiFi service is provided for authorized users only</li>
-                            <li>Use of this network constitutes acceptance of all terms and conditions</li>
-                            <li>Users are responsible for all activity on their connection</li>
-                            <li>Prohibited activities include but are not limited to:
-                                <ul>
-                                    <li>Illegal downloads or file sharing</li>
-                                    <li>Accessing inappropriate content</li>
-                                    <li>Network abuse or misuse</li>
-                                </ul>
-                            </li>
-                            <li>Network access is limited to 2 hours per session</li>
-                            <li>Network monitoring may be in effect for security purposes</li>
-                            <li>Management reserves the right to terminate access at any time</li>
-                        </ul>
-                    </div>
+            <!-- Username and Password Form -->
+            <div id="auth-form-section" class="auth-form-container">
+                <div class="auth-form-inner">
+                    <h2 class="auth-title">CSPB Admin Portal</h2>
+                    
+                    <form id="login-form" class="auth-form">
+                        <input name="clientMac" id="cMac" style="display:none"/>
+                        <input name="radiusSvrIp" id="radiusServerIp" style="display:none"/>
+                        
+                        <div class="form-group">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" id="username" name="username" class="form-input" placeholder="Enter your username" required/>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required/>
+                        </div>
+                        
+                        <div id="terms-agreement" class="form-group">
+                            <label class="terms-checkbox-container">
+                                <input type="checkbox" id="terms-checkbox" />
+                                <span class="checkmark"></span>
+                                <span class="terms-text">I agree to the WiFi usage rules</span>
+                            </label>
+                        </div>
+                        
+                        <div id="button-area" class="form-group">
+                            <button type="button" id="button-login" class="button auth-button">Login</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-            
-            <div id="terms-agreement" class="oper-section-item">
-                <label class="terms-checkbox-container">
-                    <input type="checkbox" id="terms-checkbox" />
-                    <span class="checkmark"></span>
-                    <span class="terms-text">I agree to the school's terms and conditions</span>
-                </label>
+        </div>
+    </div>
+
+    <!-- WiFi Rules Modal -->
+    <div id="rules-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>WiFi Usage Rules</h2>
+                <button id="modal-close" class="modal-close-btn">&times;</button>
             </div>
-            
-            <form id="login-form">
-                <input name="clientMac" id="cMac" style="display:none"/>
-                <input name="radiusSvrIp" id="radiusServerIp" style="display:none"/>
-                <input type="text" id="username" style="display:none"/>
-                <input type="password" id="password" style="display:none"/>
-            </form>
-            <div id="button-area">
-                <button id="button-accept" class="button oper-section-item">Accept & Connect</button>
+            <div id="modal-content" class="modal-content">
+                <div class="rules-content">
+                    <ul>
+                        <li>This WiFi service is provided for authorized users only</li>
+                        <li>Use of this network constitutes acceptance of all terms and conditions</li>
+                        <li>Users are responsible for all activity on their connection</li>
+                        <li>Prohibited activities include but are not limited to:
+                            <ul>
+                                <li>Illegal downloads or file sharing</li>
+                                <li>Accessing inappropriate content</li>
+                                <li>Network abuse or misuse</li>
+                            </ul>
+                        </li>
+                        <li>Network access is limited to 2 hours per session</li>
+                        <li>Network monitoring may be in effect for security purposes</li>
+                        <li>Management reserves the right to terminate access at any time</li>
+                        <li>All network traffic is logged and monitored for security compliance</li>
+                        <li>Users must comply with all applicable laws and regulations</li>
+                        <li>Violation of these rules may result in immediate termination of access</li>
+                        <li>By accepting these terms, you acknowledge understanding of these policies</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="modal-accept" class="button modal-accept-btn" disabled>Accept</button>
             </div>
         </div>
     </div>
