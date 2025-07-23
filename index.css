@@ -431,6 +431,31 @@ body.portal {
     margin-bottom: 4px;
 }
 
+/* Message Modal Styles */
+.message-modal-container {
+    max-width: 500px;
+}
+
+.message-content {
+    color: #333;
+    text-align: center;
+    line-height: 1.6;
+    font-size: 16px;
+    padding: 10px 0;
+}
+
+.message-content.error {
+    color: #d32f2f;
+}
+
+.message-content.success {
+    color: #2e7d32;
+}
+
+.message-content.info {
+    color: #1976d2;
+}
+
 #form-auth-msg{
   display: none;
   position: absolute;

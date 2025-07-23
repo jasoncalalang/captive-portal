@@ -201,8 +201,7 @@ function initFallbackMode() {
 function initPortalPage() {
         function pageConfigParse(){
             if (globalConfig.error !== 'ok'){
-                document.getElementById("oper-hint").style.display = "block";
-                document.getElementById("oper-hint").innerHTML = errorHintMap[globalConfig.error] || 'Configuration error';
+                showErrorModal(errorHintMap[globalConfig.error] || 'Configuration error');
             }
             // Set to simple no-auth mode for the rules acceptance portal
             window.authType = NO_AUTH;
@@ -267,9 +266,9 @@ function initPortalPage() {
                             isCommited = true;
                             landingUrl = data.result || landingUrl
                             window.location.href = landingUrl;
-                            document.getElementById("oper-hint").innerHTML = errorHintMap[data.errorCode];
+                            showSuccessModal(errorHintMap[data.errorCode]);
                         } else{
-                            document.getElementById("oper-hint").innerHTML = errorHintMap[data.errorCode];
+                            showErrorModal(errorHintMap[data.errorCode]);
                         }
                     });
                 }
@@ -281,9 +280,7 @@ function initPortalPage() {
             // Check if terms are agreed to
             var termsCheckbox = document.getElementById("terms-checkbox");
             if (termsCheckbox && !termsCheckbox.checked) {
-                document.getElementById("oper-hint").innerHTML = "Please agree to the WiFi usage rules first.";
-                document.getElementById("oper-hint").style.color = "red";
-                document.getElementById("oper-hint").style.display = "block";
+                showErrorModal("Please agree to the WiFi usage rules first.");
                 return;
             }
             
@@ -292,9 +289,7 @@ function initPortalPage() {
             var password = document.getElementById("password").value.trim();
             
             if (!username || !password) {
-                document.getElementById("oper-hint").innerHTML = "Please enter both username and password.";
-                document.getElementById("oper-hint").style.color = "red";
-                document.getElementById("oper-hint").style.display = "block";
+                showErrorModal("Please enter both username and password.");
                 return;
             }
             
@@ -312,9 +307,7 @@ function initPortalPage() {
             
             if(isCommited == false){
                 function doAuth () {
-                    document.getElementById("oper-hint").innerHTML = "Authenticating...";
-                    document.getElementById("oper-hint").style.color = "blue";
-                    document.getElementById("oper-hint").style.display = "block";
+                    showInfoModal("Authenticating...");
                     
                     Ajax.post(submitUrl, JSON.stringify(submitData).toString(), function(data){
                         try {
@@ -322,40 +315,33 @@ function initPortalPage() {
                             if(!!data && data.errorCode === 0) {
                                 isCommited = true;
                                 var landingUrl = data.result || (data.landingUrl || "https://www.google.com");
-                                document.getElementById("oper-hint").innerHTML = "Authentication successful! Redirecting...";
-                                document.getElementById("oper-hint").style.color = "green";
-                                setTimeout(function() {
+                                showSuccessModal("Authentication successful! Redirecting...", function() {
                                     window.location.href = landingUrl;
-                                }, 1500);
+                                });
                             } else{
-                                document.getElementById("oper-hint").innerHTML = errorHintMap[data.errorCode] || "Authentication failed. Please try again.";
-                                document.getElementById("oper-hint").style.color = "red";
+                                showErrorModal(errorHintMap[data.errorCode] || "Authentication failed. Please try again.");
                             }
                         } catch(e) {
                             // Fallback for standalone mode - simulate successful authentication
                             console.log('Backend not available, simulating successful authentication for user: ' + username);
                             isCommited = true;
-                            document.getElementById("oper-hint").innerHTML = "Authentication successful! Authenticated as " + username + ".";
-                            document.getElementById("oper-hint").style.color = "green";
                             
                             // In standalone mode, redirect to specified origin URL or a default page
                             var landingUrl = originUrl || "https://www.google.com";
-                            setTimeout(function() {
+                            showSuccessModal("Authentication successful! Authenticated as " + username + ".", function() {
                                 window.location.href = landingUrl;
-                            }, 2000);
+                            });
                         }
                     }, function(status, statusText) {
                         // Error callback - backend not available
                         console.log('Backend not available (error ' + status + '), simulating successful authentication for user: ' + username);
                         isCommited = true;
-                        document.getElementById("oper-hint").innerHTML = "Authentication successful! Authenticated as " + username + ".";
-                        document.getElementById("oper-hint").style.color = "green";
                         
                         // In standalone mode, redirect to specified origin URL or a default page
                         var landingUrl = originUrl || "https://www.google.com";
-                        setTimeout(function() {
+                        showSuccessModal("Authentication successful! Authenticated as " + username + ".", function() {
                             window.location.href = landingUrl;
-                        }, 2000);
+                        });
                     });
                 }
                 doAuth();
@@ -433,6 +419,63 @@ function initPortalPage() {
             hideRulesModal();
         }
         
+        // Message Modal functionality
+        function showMessageModal(title, message, type, callback) {
+            var modal = document.getElementById("message-modal");
+            var titleElement = document.getElementById("message-modal-title");
+            var contentElement = document.getElementById("message-modal-content");
+            
+            // Set title and message
+            titleElement.textContent = title;
+            contentElement.textContent = message;
+            
+            // Remove any previous type classes and add new type class
+            contentElement.className = "message-content";
+            if (type) {
+                contentElement.classList.add(type);
+            }
+            
+            // Show modal with smooth animation
+            modal.style.display = "flex";
+            // Force reflow to ensure display change is applied before adding class
+            modal.offsetHeight;
+            modal.classList.add("modal-show");
+            
+            // Set callback for OK button if provided
+            var okButton = document.getElementById("message-modal-ok");
+            okButton.onclick = function() {
+                hideMessageModal();
+                if (callback && typeof callback === 'function') {
+                    callback();
+                }
+            };
+        }
+        
+        function hideMessageModal() {
+            var modal = document.getElementById("message-modal");
+            
+            // Start fade out animation
+            modal.classList.remove("modal-show");
+            
+            // Hide modal after animation completes
+            setTimeout(function() {
+                modal.style.display = "none";
+            }, 300);
+        }
+        
+        // Helper functions for different message types
+        function showErrorModal(message, callback) {
+            showMessageModal("Error", message, "error", callback);
+        }
+        
+        function showSuccessModal(message, callback) {
+            showMessageModal("Success", message, "success", callback);
+        }
+        
+        function showInfoModal(message, callback) {
+            showMessageModal("Information", message, "info", callback);
+        }
+        
         function updateLoginButtonState() {
             var termsCheckbox = document.getElementById("terms-checkbox");
             var loginButton = document.getElementById("button-login");
@@ -498,12 +541,34 @@ function initPortalPage() {
             });
         }
         
-        // Close modal when clicking outside
+        // Message modal event handlers
+        if (document.getElementById("message-modal-close")) {
+            document.getElementById("message-modal-close").addEventListener("click", function() {
+                hideMessageModal();
+            });
+        }
+        
+        if (document.getElementById("message-modal-ok")) {
+            document.getElementById("message-modal-ok").addEventListener("click", function() {
+                hideMessageModal();
+            });
+        }
+        
+        // Close modals when clicking outside
         var rulesModal = document.getElementById("rules-modal");
         if (rulesModal) {
             rulesModal.addEventListener("click", function(e) {
                 if (e.target === rulesModal) {
                     hideRulesModal();
+                }
+            });
+        }
+        
+        var messageModal = document.getElementById("message-modal");
+        if (messageModal) {
+            messageModal.addEventListener("click", function(e) {
+                if (e.target === messageModal) {
+                    hideMessageModal();
                 }
             });
         }
@@ -544,15 +609,15 @@ function initPortalPage() {
                     }),function(data){
                         data = JSON.parse(data);
                         if(data.errorCode !== 0){
-                            document.getElementById("oper-hint").innerHTML = errorHintMap[data.errorCode];
+                            showErrorModal(errorHintMap[data.errorCode]);
                         } else {
-                            document.getElementById("oper-hint").innerHTML = "SMS has been sent successfully.";
+                            showSuccessModal("SMS has been sent successfully.");
                         }
                     }
                 );
             }
             sendSmsAuthCode();
-            document.getElementById("oper-hint").innerHTML = "Sending Authorization Code...";
+            showInfoModal("Sending Authorization Code...");
         });
         }
         pageConfigParse();
