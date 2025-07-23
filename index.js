@@ -266,7 +266,6 @@ function initPortalPage() {
                             isCommited = true;
                             landingUrl = data.result || landingUrl
                             window.location.href = landingUrl;
-                            showSuccessModal(errorHintMap[data.errorCode]);
                         } else{
                             showErrorModal(errorHintMap[data.errorCode]);
                         }
@@ -307,17 +306,13 @@ function initPortalPage() {
             
             if(isCommited == false){
                 function doAuth () {
-                    showInfoModal("Authenticating...");
-                    
                     Ajax.post(submitUrl, JSON.stringify(submitData).toString(), function(data){
                         try {
                             data = JSON.parse(data);
                             if(!!data && data.errorCode === 0) {
                                 isCommited = true;
                                 var landingUrl = data.result || (data.landingUrl || "https://www.google.com");
-                                showSuccessModal("Authentication successful! Redirecting...", function() {
-                                    window.location.href = landingUrl;
-                                });
+                                window.location.href = landingUrl;
                             } else{
                                 showErrorModal(errorHintMap[data.errorCode] || "Authentication failed. Please try again.");
                             }
@@ -328,9 +323,7 @@ function initPortalPage() {
                             
                             // In standalone mode, redirect to specified origin URL or a default page
                             var landingUrl = originUrl || "https://www.google.com";
-                            showSuccessModal("Authentication successful! Authenticated as " + username + ".", function() {
-                                window.location.href = landingUrl;
-                            });
+                            window.location.href = landingUrl;
                         }
                     }, function(status, statusText) {
                         // Error callback - backend not available
@@ -339,9 +332,7 @@ function initPortalPage() {
                         
                         // In standalone mode, redirect to specified origin URL or a default page
                         var landingUrl = originUrl || "https://www.google.com";
-                        showSuccessModal("Authentication successful! Authenticated as " + username + ".", function() {
-                            window.location.href = landingUrl;
-                        });
+                        window.location.href = landingUrl;
                     });
                 }
                 doAuth();
@@ -610,14 +601,12 @@ function initPortalPage() {
                         data = JSON.parse(data);
                         if(data.errorCode !== 0){
                             showErrorModal(errorHintMap[data.errorCode]);
-                        } else {
-                            showSuccessModal("SMS has been sent successfully.");
                         }
+                        // SMS sent successfully - no modal needed
                     }
                 );
             }
             sendSmsAuthCode();
-            showInfoModal("Sending Authorization Code...");
         });
         }
         pageConfigParse();
