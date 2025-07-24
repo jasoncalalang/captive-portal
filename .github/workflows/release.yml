@@ -1,8 +1,7 @@
 name: Create Release
 
 on:
-  push:
-    branches: [ "**" ]
+  workflow_dispatch:
 
 jobs:
   release:
@@ -36,7 +35,8 @@ jobs:
       run: |
         cd release
         if [[ "${{ github.ref_name }}" == "copilot/fix-13" ]]; then
-          zip -r ../captive-portal-cspb-admin-v1.0.${{ github.run_number }}.zip .
+          BUILD_NUMBER=$((${{ github.run_number }} - 1))
+          zip -r ../cspb-admin-captive-portal.1.0.$BUILD_NUMBER.zip .
         else
           zip -r ../captive-portal-v1.0.${{ github.run_number }}.zip .
         fi
@@ -45,8 +45,9 @@ jobs:
     - name: Create Release
       run: |
         if [[ "${{ github.ref_name }}" == "copilot/fix-13" ]]; then
-          gh release create cspb-admin-v1.0.${{ github.run_number }} \
-            --title "CSPB Admin v1.0.${{ github.run_number }}" \
+          BUILD_NUMBER=$((${{ github.run_number }} - 1))
+          gh release create cspb-admin-captive-portal.1.0.$BUILD_NUMBER \
+            --title "CSPB Admin 1.0.$BUILD_NUMBER" \
             --notes "CSPB Admin Portal Release - Username/Password Authentication
             
           This release contains the CSPB Admin authentication portal with:
@@ -56,12 +57,12 @@ jobs:
           • Smooth modal animations
           • Error message modals for validation
           
-          Version: 1.0.${{ github.run_number }}
-          Build: ${{ github.run_number }}
+          Version: 1.0.$BUILD_NUMBER
+          Build: $BUILD_NUMBER
           Commit: ${{ github.sha }}
           
           This release contains the complete CSPB Admin portal static files ready for deployment." \
-            ./captive-portal-cspb-admin-v1.0.${{ github.run_number }}.zip
+            ./cspb-admin-captive-portal.1.0.$BUILD_NUMBER.zip
         else
           gh release create v1.0.${{ github.run_number }} \
             --title "Captive Portal Release v1.0.${{ github.run_number }}" \
