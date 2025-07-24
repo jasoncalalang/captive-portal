@@ -35,20 +35,44 @@ jobs:
     - name: Create zip file
       run: |
         cd release
-        zip -r ../captive-portal-v1.0.${{ github.run_number }}.zip .
+        if [[ "${{ github.ref_name }}" == "copilot/fix-13" ]]; then
+          zip -r ../captive-portal-cspb-admin-v1.0.${{ github.run_number }}.zip .
+        else
+          zip -r ../captive-portal-v1.0.${{ github.run_number }}.zip .
+        fi
         cd ..
         
     - name: Create Release
       run: |
-        gh release create v1.0.${{ github.run_number }} \
-          --title "Captive Portal Release v1.0.${{ github.run_number }}" \
-          --notes "Automated release of captive portal project.
+        if [[ "${{ github.ref_name }}" == "copilot/fix-13" ]]; then
+          gh release create cspb-admin-v1.0.${{ github.run_number }} \
+            --title "CSPB Admin v1.0.${{ github.run_number }}" \
+            --notes "CSPB Admin Portal Release - Username/Password Authentication
+            
+          This release contains the CSPB Admin authentication portal with:
+          • Username and password authentication form
+          • Interactive WiFi usage rules modal
+          • Professional CSPB branding and styling
+          • Smooth modal animations
+          • Error message modals for validation
           
-        Version: 1.0.${{ github.run_number }}
-        Build: ${{ github.run_number }}
-        Commit: ${{ github.sha }}
-        
-        This release contains the complete captive portal static files ready for deployment." \
-          ./captive-portal-v1.0.${{ github.run_number }}.zip
+          Version: 1.0.${{ github.run_number }}
+          Build: ${{ github.run_number }}
+          Commit: ${{ github.sha }}
+          
+          This release contains the complete CSPB Admin portal static files ready for deployment." \
+            ./captive-portal-cspb-admin-v1.0.${{ github.run_number }}.zip
+        else
+          gh release create v1.0.${{ github.run_number }} \
+            --title "Captive Portal Release v1.0.${{ github.run_number }}" \
+            --notes "Automated release of captive portal project.
+            
+          Version: 1.0.${{ github.run_number }}
+          Build: ${{ github.run_number }}
+          Commit: ${{ github.sha }}
+          
+          This release contains the complete captive portal static files ready for deployment." \
+            ./captive-portal-v1.0.${{ github.run_number }}.zip
+        fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
