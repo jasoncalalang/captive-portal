@@ -5,7 +5,11 @@ This repository uses GitHub Actions to automatically create releases when new ta
 ## How the Automated Release Works
 
 ### Trigger
-The release workflow is triggered automatically when you push a tag that starts with 'v' (e.g., `v1.0.0`, `v2.1.3`, `v1.0.32`).
+The release workflow is triggered automatically when you push a tag that:
+- Starts with 'v' (e.g., `v1.0.0`, `v2.1.3`, `v1.0.32`)
+- Contains '-v' (e.g., `cspb-admin-v1.0.30`, `enterprise-v2.0.1`)
+
+This covers all existing tag patterns in the repository.
 
 ### What Gets Released
 The automated release includes:
