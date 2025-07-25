@@ -2,7 +2,8 @@ name: Create Release
 
 on:
   push:
-    branches: [ "**" ]
+    tags:
+      - 'v*'
 
 jobs:
   release:
@@ -27,6 +28,9 @@ jobs:
         cp jquery.min.js release/
         cp tailwind.min.css release/
         
+        # Copy image assets
+        cp *.png release/ 2>/dev/null || true
+        
         # Copy img directory if it exists
         if [ -d "img" ]; then
           cp -r img release/
@@ -35,20 +39,19 @@ jobs:
     - name: Create zip file
       run: |
         cd release
-        zip -r ../captive-portal-v1.0.${{ github.run_number }}.zip .
+        zip -r ../captive-portal-${{ github.ref_name }}.zip .
         cd ..
         
     - name: Create Release
       run: |
-        gh release create v1.0.${{ github.run_number }} \
-          --title "Captive Portal Release v1.0.${{ github.run_number }}" \
+        gh release create ${{ github.ref_name }} \
+          --title "Captive Portal Release ${{ github.ref_name }}" \
           --notes "Automated release of captive portal project.
           
-        Version: 1.0.${{ github.run_number }}
-        Build: ${{ github.run_number }}
+        Version: ${{ github.ref_name }}
         Commit: ${{ github.sha }}
         
         This release contains the complete captive portal static files ready for deployment." \
-          ./captive-portal-v1.0.${{ github.run_number }}.zip
+          ./captive-portal-${{ github.ref_name }}.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
